@@ -7,9 +7,7 @@ const FoldersService = {
     .from('folders')
     .where('id', id)
     .first()
-  },
-  
-
+  }
 }
 
 module.exports = FoldersService

@@ -54,8 +54,8 @@ function makeNotesArray() {
       thoughts: "A really great book I heard about",
       favorite: true,
       author: 1,
-      date_created: new Date().toLocaleString(),
-      date_edited: new Date().toLocaleString(),
+      date_created: new Date('09-04-2019').toLocaleString(),
+      date_edited: new Date('09-04-2019').toLocaleString(),
       folder: 2
     },
     {
@@ -67,8 +67,8 @@ function makeNotesArray() {
       thoughts: "Good stuff",
       favorite: true,
       author: 1,
-      date_created: new Date().toLocaleString(),
-      date_edited: new Date().toLocaleString(),
+      date_created: new Date('09-04-2019').toLocaleString(),
+      date_edited: new Date('09-04-2019').toLocaleString(),
       folder: 3
     },
     {
@@ -80,8 +80,8 @@ function makeNotesArray() {
       thoughts: "Seems bleak, but Megan says it's good.",
       favorite: false,
       author: 1,
-      date_created: new Date().toLocaleString(),
-      date_edited: new Date().toLocaleString(),
+      date_created: new Date('09-04-2019').toLocaleString(),
+      date_edited: new Date('09-04-2019').toLocaleString(),
       folder: 1
     }
   ]
@@ -92,6 +92,25 @@ function makeNotesFixtures() {
   const testFolders = makeFoldersArray()
   const testNotes = makeNotesArray()
   return { testUsers, testFolders, testNotes }
+}
+
+function makeExpectedNote(note, users, folders) {
+  const noteAuthor = users && users.length && users.find(user => user.id === note.author).id
+  const noteFolder = folders && folders.length && folders.find(folder => folder.id === note.folder).id
+
+  return {
+    id: note.id,
+    what: note.what,
+    how: note.how,
+    who: note.how,
+    link: note.link,
+    thoughts: note.thoughts,
+    favorite: note.favorite,
+    author: noteAuthor,
+    date_created: new Date(note.date_created).toLocaleString(),
+    date_edited: new Date(note.date_edited).toLocaleString(),
+    folder: noteFolder
+  }
 }
 
 function cleanTables(db) {
@@ -145,6 +164,7 @@ module.exports = {
   makeFoldersArray,
   makeNotesArray,
   makeNotesFixtures,
+  makeExpectedNote,
   cleanTables,
   seedUsers,
   seedNotesTables

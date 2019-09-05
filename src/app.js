@@ -7,6 +7,7 @@ const { NODE_ENV } = require('./config')
 
 const usersRouter = require('./users/users-router')
 const foldersRouter = require('./folders/folders-router')
+const notesRouter = require('./notes/notes-router')
 
 const app = express()
 
@@ -20,6 +21,7 @@ app.use(helmet())
 
 app.use('/api/users', usersRouter)
 app.use('/api/folders', foldersRouter)
+app.use('/api/notes', notesRouter)
 
 app.use(function errorHandler(error, req, res, next) {
   let response

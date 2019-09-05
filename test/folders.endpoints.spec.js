@@ -2,7 +2,7 @@ const knex = require('knex')
 const app = require('../src/app')
 const helpers = require('./test-helpers')
 
-describe.only('Folders endpoints', () => {
+describe('Folders endpoints', () => {
   let db 
   
   before('make knex instance', () => {
