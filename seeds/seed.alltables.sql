@@ -1,6 +1,10 @@
 BEGIN;
 
-TRUNCATE notes, users, folders RESTART IDENTITY CASCADE;
+TRUNCATE notes, folders, users RESTART IDENTITY CASCADE;
+
+INSERT INTO users (full_name, email, password)
+VALUES
+  ('Demo User', 'demo@demo.com', 'demo123');
 
 INSERT INTO folders (text, icon)
 VALUES
@@ -11,10 +15,6 @@ VALUES
   ('Do', 'hiking'),
   ('Go', 'road'),
   ('Archives', 'folder');
-
-INSERT INTO users (full_name, email, password)
-VALUES
-  ('Demo User', 'demo@demo.com', 'demo123');
 
 INSERT INTO notes (what, how, who, link, thoughts, favorite, author, folder)
 VALUES
