@@ -22,9 +22,21 @@ describe('Notes endpoints', () => {
 
   describe('GET /api/notes', () => {
     context('Given no notes in database', () => {
+      beforeEach('insert users and folders', () => {
+        return db
+          .into('users')
+          .insert(testUsers)
+          .then(() => {
+            return db
+              .into('folders')
+              .insert(testFolders)
+          })
+      })
+
       it('responds with 200 and an empty array', () => {
         return supertest(app)
           .get('/api/notes')
+          .set('Authorization', helpers.makeAuthHeader(testUsers[0]))
           .expect(200, [])
       })
     })
@@ -54,6 +66,7 @@ describe('Notes endpoints', () => {
         ))
         return supertest(app)
         .get('/api/notes')
+        .set('Authorization', helpers.makeAuthHeader(testUsers[0]))
         .expect(200, expectedNotes)
       })
     })
@@ -78,6 +91,7 @@ describe('Notes endpoints', () => {
       it('removes XSS attack content', () => {
         return supertest(app)
           .get('/api/notes')
+          .set('Authorization', helpers.makeAuthHeader(testUsers[0]))
           .expect(200)
           .expect(res => {
             expect(res.body[0].what).to.eql(expectedNote.what)
@@ -89,10 +103,21 @@ describe('Notes endpoints', () => {
 
   describe('GET /api/notes/:note_id', () => {
     context('Given no notes in the database', () => {
+      beforeEach('insert users and folders', () => {
+        return db
+          .into('users')
+          .insert(testUsers)
+          .then(() => {
+            return db
+              .into('folders')
+              .insert(testFolders)
+          })
+      })
       it('responds with 404', () => {
         const noteId = 5555
         return supertest(app)
           .get(`/api/notes/${noteId}`)
+          .set('Authorization', helpers.makeAuthHeader(testUsers[0]))
           .expect(404, { error: { message: `Note doesn't exist`} })
       })
     })
@@ -118,6 +143,7 @@ describe('Notes endpoints', () => {
         const expectedNote = testNotes[noteId - 1]
         return supertest(app)
           .get(`/api/notes/${noteId}`)
+          .set('Authorization', helpers.makeAuthHeader(testUsers[0]))
           .expect(200, expectedNote)
       })
     })
@@ -143,6 +169,7 @@ describe('Notes endpoints', () => {
       it('removes XSS attack content', () => {
         return supertest(app)
           .get(`/api/notes/${maliciousNote.id}`)
+          .set('Authorization', helpers.makeAuthHeader(testUsers[0]))
           .expect(200)
           .expect(res => {
             expect(res.body.what).to.eql(expectedNote.what)
@@ -165,6 +192,7 @@ describe('Notes endpoints', () => {
     })
   
     it('creates a new note, responding with 201 and the new note', () => {
+      const testFolder = testFolders[0]
       const newNote = {
         what: "This cool show",
         how: "HBO",
@@ -172,33 +200,36 @@ describe('Notes endpoints', () => {
         link: "www.link.com",
         thoughts: "Todd told me about it.",
         favorite: false,
-        author: 1,
-        folder: 1
+        folder: testFolder.id
       }
       return supertest(app)
         .post('/api/notes')
+        .set('Authorization', helpers.makeAuthHeader(testUsers[0]))
         .send(newNote)
         .expect(201)
         .expect(res => {
+          expect(res.body).to.have.property('id')
           expect(res.body.what).to.eql(newNote.what)
           expect(res.body.how).to.eql(newNote.how)
           expect(res.body.who).to.eql(newNote.who)
           expect(res.body.link).to.eql(newNote.link)
           expect(res.body.thoughts).to.eql(newNote.thoughts)
           expect(res.body.favorite).to.eql(newNote.favorite)
+          expect(res.body.author).to.eql(testUsers[0].id)
           expect(res.body.folder).to.eql(newNote.folder)
           expect(res.headers.location).to.eql(`/api/notes/${res.body.id}`)
-          const expected = new Intl.DateTimeFormat('en-US').format(new Date())
-          const actual = new Intl.DateTimeFormat('en-US').format(new Date(res.body.date_created))
-          expect(actual).to.eql(expected)
+          // const expectedDate = new Date().toLocaleString('en', { timeZone: 'UTC' })
+          // const actualDate = new Date(res.body.date_created).toLocaleString()
+          // expect(actualDate).to.eql(expectedDate)
         })
-        .then(res =>
-          supertest(app)
-          .get(`/api/notes/${res.body.id}`)
-          .expect(res.body)
-        )
+          .then(res =>
+            supertest(app)
+            .get(`/api/notes/${res.body.id}`)
+            .set('Authorization', helpers.makeAuthHeader(testUsers[0]))
+            .expect(res.body)
+          )
     })
-    const requiredFields = ['what', 'folder', 'author']
+    const requiredFields = ['what', 'folder']
 
     requiredFields.forEach(field => {
       const newNote = {
@@ -208,7 +239,6 @@ describe('Notes endpoints', () => {
         link: "www.link.com",
         thoughts: "Todd told me about it.",
         favorite: false,
-        author: 1,
         folder: 1
       }
 
@@ -217,6 +247,7 @@ describe('Notes endpoints', () => {
 
         return supertest(app)
           .post('/api/notes')
+          .set('Authorization', helpers.makeAuthHeader(testUsers[0]))
           .send(newNote)
           .expect(400, {
             error: { message: `Missing '${field}' in request body` }
@@ -226,10 +257,21 @@ describe('Notes endpoints', () => {
   })
   describe('PATCH /api/notes/:note_id', () => {
     context('Given no notes', () => {
+      beforeEach('insert users and folders', () => {
+        return db
+          .into('users')
+          .insert(testUsers)
+          .then(() => {
+            return db
+              .into('folders')
+              .insert(testFolders)
+          })
+      })
       it('responds with 404', () => {
         const noteId = 12345
         return supertest(app)
           .patch(`/api/notes/${noteId}`)
+          .set('Authorization', helpers.makeAuthHeader(testUsers[0]))
           .expect(404, { error: { message: `Note doesn't exist`}})
       })
     })
@@ -260,11 +302,13 @@ describe('Notes endpoints', () => {
         }
         return supertest(app)
           .patch(`/api/notes/${idToUpdate}`)
+          .set('Authorization', helpers.makeAuthHeader(testUsers[0]))
           .send(updateNote)
           .expect(204)
           .then(res =>
             supertest(app)
               .get(`/api/notes/${idToUpdate}`)
+              .set('Authorization', helpers.makeAuthHeader(testUsers[0]))
               .expect(expectedNote)
           )
       })
@@ -280,6 +324,7 @@ describe('Notes endpoints', () => {
 
         return supertest(app)
           .patch(`/api/notes/${idToUpdate}`)
+          .set('Authorization', helpers.makeAuthHeader(testUsers[0]))
           .send({
             ...updateNote,
             fieldToIgnore: 'should not be in GET response'
@@ -288,6 +333,7 @@ describe('Notes endpoints', () => {
           .then(res =>
             supertest(app)
               .get(`/api/notes/${idToUpdate}`)
+              .set('Authorization', helpers.makeAuthHeader(testUsers[0]))
               .expect(expectedNote)
           )
       })
@@ -295,10 +341,21 @@ describe('Notes endpoints', () => {
   })
   describe('DELETE /api/notes/:note_id', () => {
     context('Given no notes', () => {
+      beforeEach('insert users and folders', () => {
+        return db
+          .into('users')
+          .insert(testUsers)
+          .then(() => {
+            return db
+              .into('folders')
+              .insert(testFolders)
+          })
+      })
       it('responds with 404', () => {
         const noteId = 12345
         return supertest(app)
           .delete(`/api/notes/${noteId}`)
+          .set('Authorization', helpers.makeAuthHeader(testUsers[0]))
           .expect(404, { error: { message: `Note doesn't exist`}})
       })
     })
@@ -323,10 +380,12 @@ describe('Notes endpoints', () => {
         const expectedNotes = testNotes.filter(note => note.id !== idToRemove)
         return supertest(app)
           .delete(`/api/notes/${idToRemove}`)
+          .set('Authorization', helpers.makeAuthHeader(testUsers[0]))
           .expect(204)
           .then(res =>
               supertest(app)
                 .get(`/api/notes`)
+                .set('Authorization', helpers.makeAuthHeader(testUsers[0]))
                 .expect(expectedNotes)
           )
       })

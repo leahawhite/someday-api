@@ -1,12 +1,14 @@
 const express = require('express')
 const path = require('path')
 const NotesService = require('./notes-service')
+const { requireAuth } = require('../middleware/jwt-auth')
 
 const jsonParser = express.json()
 const notesRouter = express.Router()
 
 notesRouter
   .route('/')
+  .all(requireAuth)
   .get((req, res, next) => {
     NotesService.getAllNotes(req.app.get('db'))
       .then(notes => {
@@ -15,9 +17,9 @@ notesRouter
       .catch(next)
   })
   .post(jsonParser, (req, res, next) => {
-    const { what, how, who, link, thoughts, favorite, author, folder } = req.body
-    const newNote = { what, how, who, link, thoughts, favorite, author, folder }
-    const requiredFields = { what, author, folder }
+    const { what, how, who, link, thoughts, favorite, folder } = req.body
+    const newNote = { what, how, who, link, thoughts, favorite, folder }
+    const requiredFields = { what, folder }
     
     for (const [key, value] of Object.entries(requiredFields)) {
       if (value == null) {
@@ -26,6 +28,7 @@ notesRouter
         })
       }
     }
+    newNote.author = req.user.id
     NotesService.insertNote(
       req.app.get('db'),
       newNote
@@ -41,13 +44,15 @@ notesRouter
 
 notesRouter
   .route('/:note_id')
+  .all(requireAuth)
   .all(checkNoteExists)
   .get((req, res) => {
     res.json(NotesService.serializeNote(res.note))
   })
   .patch(jsonParser, (req, res, next) => {
-    const { what, how, who, link, thoughts, favorite, author, folder } = req.body
-    const noteToUpdate = { what, how, who, link, thoughts, favorite, author, folder }
+    const { what, how, who, link, thoughts, favorite, folder } = req.body
+    const noteToUpdate = { what, how, who, link, thoughts, favorite, folder }
+    noteToUpdate.author = req.user.id
     NotesService.updateNote(
       req.app.get('db'), 
       req.params.note_id, 
