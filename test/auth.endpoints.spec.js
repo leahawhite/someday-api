@@ -23,7 +23,7 @@ describe.only('Auth endpoints', () => {
 
   afterEach('cleanup', () => helpers.cleanTables(db))
 
-  describe(`POST /api/login`, () => {
+  describe(`POST /api/auth/login`, () => {
     beforeEach('insert users', () =>
       helpers.seedUsers(
         db,
@@ -43,7 +43,7 @@ describe.only('Auth endpoints', () => {
         delete loginAttemptBody[field]
 
         return supertest(app)
-          .post('/api/login')
+          .post('/api/auth/login')
           .send(loginAttemptBody)
           .expect(400, {
             error: `Missing '${field}' in request body`,
@@ -54,7 +54,7 @@ describe.only('Auth endpoints', () => {
     it(`responds 400 'invalid email or password' when bad email`, () => {
       const userInvalidEmail = { email: 'fake', password: 'exists123' }
       return supertest(app)
-        .post('/api/login')
+        .post('/api/auth/login')
         .send(userInvalidEmail)
         .expect(400, { error: `Incorrect email or password` })
     })
@@ -62,7 +62,7 @@ describe.only('Auth endpoints', () => {
     it(`responds 400 'invalid email or password' when bad password`, () => {
       const userInvalidPass = { email: testUser.email, password: 'wrong' }
       return supertest(app)
-        .post('/api/login')
+        .post('/api/auth/login')
         .send(userInvalidPass)
         .expect(400, { error: `Incorrect email or password` })
     })
@@ -81,7 +81,7 @@ describe.only('Auth endpoints', () => {
         }
       )
       return supertest(app)
-        .post('/api/login')
+        .post('/api/auth/login')
         .send(userValidCreds)
         .expect(200, {
           authToken: expectedToken,
