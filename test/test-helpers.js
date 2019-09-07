@@ -102,7 +102,7 @@ function makeExpectedNote(note, users, folders) {
     id: note.id,
     what: note.what,
     how: note.how,
-    who: note.how,
+    who: note.who,
     link: note.link,
     thoughts: note.thoughts,
     favorite: note.favorite,
@@ -128,6 +128,31 @@ function cleanTables(db) {
   )
 }
 
+function makeMaliciousNote() {
+  const maliciousNote = {
+    id: 1,
+    what: 'Naughty naughty very naughty <script>alert("xss");</script>',
+    how: 'HBO',
+    who: 'Megan',
+    link: `Bad image <img src="https://url.to.file.which/does-not.exist" onerror="alert(document.cookie);">. But not <strong>all</strong> bad.`,
+    thoughts: "Seems bleak, but Megan says it's good.",
+    favorite: false,
+    author: 1,
+    date_created: new Date('09-04-2019').toLocaleString(),
+    date_edited: new Date('09-04-2019').toLocaleString(),
+    folder: 1
+  }
+  const expectedNote = {
+    ...maliciousNote,
+    what: 'Naughty naughty very naughty &lt;script&gt;alert(\"xss\");&lt;/script&gt;',
+    link: `Bad image <img src="https://url.to.file.which/does-not.exist">. But not <strong>all</strong> bad.`
+  }
+  return {
+    maliciousNote,
+    expectedNote
+  }
+}
+
 function seedUsers(db, users) {
   const preppedUsers = users.map(user => ({
     ...user,
@@ -142,30 +167,13 @@ function seedUsers(db, users) {
   )
 }
 
-function seedNotesTables(db, users, folders, notes) {
-  return db.transaction(async trx => {
-    await seedUsers(trx, users)
-    await trx.into('folders').insert(folders)
-    // update the auto sequence to match the forced id values
-    await trx.raw(
-      `SELECT setval('folders_id_seq', ?)`,
-      [folders[folders.length - 1].id]
-    )
-    await trx.into('notes').insert(notes)
-    await trx.raw(
-      `SELECT setval('notes_id_seq', ?)`,
-      [notes[notes.length - 1].id]
-    )
-  })
-}
-
 module.exports = {
   makeUsersArray,
   makeFoldersArray,
   makeNotesArray,
   makeNotesFixtures,
   makeExpectedNote,
+  makeMaliciousNote,
   cleanTables,
   seedUsers,
-  seedNotesTables
 }

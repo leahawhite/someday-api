@@ -52,5 +52,22 @@ describe('Folders endpoints', () => {
           .expect(404, { error: { message: `Folder doesn't exist`} })
       })
     })
+    context('Given there are folders in the database', () => {
+      const { testFolders } = helpers.makeNotesFixtures()
+      
+      beforeEach('insert folders', () => {
+        return db
+          .into('folders')
+          .insert(testFolders)
+      })
+      
+      it('responds with 200 and the specified folder', () => {
+        const folderId = 3
+        const expectedFolder = testFolders[folderId - 1]
+        return supertest(app)
+          .get(`/api/folders/${folderId}`)
+          .expect(200, expectedFolder)
+      })
+    })
   })
 })

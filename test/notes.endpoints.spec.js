@@ -2,7 +2,7 @@ const knex = require('knex')
 const app = require('../src/app')
 const helpers = require('./test-helpers')
 
-describe.only('Notes endpoints', () => {
+describe('Notes endpoints', () => {
   let db 
   const { testUsers, testFolders, testNotes } = helpers.makeNotesFixtures()
   
@@ -29,10 +29,6 @@ describe.only('Notes endpoints', () => {
       })
     })
     context('Given there are notes in the database', () => {
-      const testUsers = helpers.makeUsersArray()
-      const testFolders = helpers.makeFoldersArray()
-      const testNotes = helpers.makeNotesArray()
-
       beforeEach('insert notes', () => {
         return db
           .into('users')
@@ -49,15 +45,6 @@ describe.only('Notes endpoints', () => {
           })
       })
       
-      // beforeEach('seed tables', () => {
-      //   helpers.seedNotesTables(
-      //     db,
-      //     testUsers,
-      //     testFolders,
-      //     testNotes
-      //   )
-      // })
-      
       it('responds with 200 and all of the folders', () => {
         const expectedNotes = testNotes.map(note =>
           helpers.makeExpectedNote(
@@ -71,17 +58,19 @@ describe.only('Notes endpoints', () => {
       })
     })
     context('Given an XSS attack note', () => {
-      const testUsers = helpers.makeUsersArray()
-      const testFolders = helpers.makeFoldersArray()
-      // const { maliciousNote, expectedNote } = makeMaliciousNote()
-
-      beforeEach('insert malicious note', () => {
+      const { maliciousNote, expectedNote } = helpers.makeMaliciousNote()
+      beforeEach('insert notes', () => {
         return db
-          .into('noteful_folders')
-          .insert(testFolders)
+          .into('users')
+          .insert(testUsers)
           .then(() => {
             return db
-              .into('noteful_notes')
+              .into('folders')
+              .insert(testFolders)
+          })
+          .then(() => {
+            return db
+              .into('notes')
               .insert([maliciousNote])
           })
       })
@@ -91,13 +80,256 @@ describe.only('Notes endpoints', () => {
           .get('/api/notes')
           .expect(200)
           .expect(res => {
-            expect(res.body[0].note_name).to.eql(expectedNote.note_name)
-            expect(res.body[0].content).to.eql(expectedNote.content)
+            expect(res.body[0].what).to.eql(expectedNote.what)
+            expect(res.body[0].link).to.eql(expectedNote.link)
           })
       })
     })
   })
 
-})
+  describe('GET /api/notes/:note_id', () => {
+    context('Given no notes in the database', () => {
+      it('responds with 404', () => {
+        const noteId = 5555
+        return supertest(app)
+          .get(`/api/notes/${noteId}`)
+          .expect(404, { error: { message: `Note doesn't exist`} })
+      })
+    })
+    context('Given there are notes in the database', () => {
+      beforeEach('insert notes', () => {
+        return db
+          .into('users')
+          .insert(testUsers)
+          .then(() => {
+            return db
+              .into('folders')
+              .insert(testFolders)
+          })
+          .then(() => {
+            return db
+              .into('notes')
+              .insert(testNotes)
+          })
+      })
+      
+      it('responds with 200 and the specified note', () => {
+        const noteId = 1
+        const expectedNote = testNotes[noteId - 1]
+        return supertest(app)
+          .get(`/api/notes/${noteId}`)
+          .expect(200, expectedNote)
+      })
+    })
+    context('Given an XSS attack note', () => {
+      const { maliciousNote, expectedNote } = helpers.makeMaliciousNote()
 
-// get all, get by id, post, patch, delete
+      beforeEach('insert notes', () => {
+        return db
+          .into('users')
+          .insert(testUsers)
+          .then(() => {
+            return db
+              .into('folders')
+              .insert(testFolders)
+          })
+          .then(() => {
+            return db
+              .into('notes')
+              .insert([maliciousNote])
+          })
+      })
+
+      it('removes XSS attack content', () => {
+        return supertest(app)
+          .get(`/api/notes/${maliciousNote.id}`)
+          .expect(200)
+          .expect(res => {
+            expect(res.body.what).to.eql(expectedNote.what)
+            expect(res.body.link).to.eql(expectedNote.link)
+          })
+      })
+    })
+  })
+  describe('POST /api/notes', () => {
+    beforeEach('insert users and folders', () => {
+      return db
+        .into('users')
+        .insert(testUsers)
+        .then(() => {
+          return db
+            .into('folders')
+            .insert(testFolders)
+        })
+        
+    })
+  
+    it('creates a new note, responding with 201 and the new note', () => {
+      const newNote = {
+        what: "This cool show",
+        how: "HBO",
+        who: "Todd",
+        link: "www.link.com",
+        thoughts: "Todd told me about it.",
+        favorite: false,
+        author: 1,
+        folder: 1
+      }
+      return supertest(app)
+        .post('/api/notes')
+        .send(newNote)
+        .expect(201)
+        .expect(res => {
+          expect(res.body.what).to.eql(newNote.what)
+          expect(res.body.how).to.eql(newNote.how)
+          expect(res.body.who).to.eql(newNote.who)
+          expect(res.body.link).to.eql(newNote.link)
+          expect(res.body.thoughts).to.eql(newNote.thoughts)
+          expect(res.body.favorite).to.eql(newNote.favorite)
+          expect(res.body.folder).to.eql(newNote.folder)
+          expect(res.headers.location).to.eql(`/api/notes/${res.body.id}`)
+          const expected = new Intl.DateTimeFormat('en-US').format(new Date())
+          const actual = new Intl.DateTimeFormat('en-US').format(new Date(res.body.date_created))
+          expect(actual).to.eql(expected)
+        })
+        .then(res =>
+          supertest(app)
+          .get(`/api/notes/${res.body.id}`)
+          .expect(res.body)
+        )
+    })
+    const requiredFields = ['what', 'folder', 'author']
+
+    requiredFields.forEach(field => {
+      const newNote = {
+        what: "This cool show",
+        how: "HBO",
+        who: "Todd",
+        link: "www.link.com",
+        thoughts: "Todd told me about it.",
+        favorite: false,
+        author: 1,
+        folder: 1
+      }
+
+      it(`responds with 400 and an error message when the '${field}' is missing`, () => {
+        delete newNote[field]
+
+        return supertest(app)
+          .post('/api/notes')
+          .send(newNote)
+          .expect(400, {
+            error: { message: `Missing '${field}' in request body` }
+          })
+      })
+    })
+  })
+  describe('PATCH /api/notes/:note_id', () => {
+    context('Given no notes', () => {
+      it('responds with 404', () => {
+        const noteId = 12345
+        return supertest(app)
+          .patch(`/api/notes/${noteId}`)
+          .expect(404, { error: { message: `Note doesn't exist`}})
+      })
+    })
+    context('Given there are notes in the database', () => {
+      beforeEach('insert notes', () => {
+        return db
+          .into('users')
+          .insert(testUsers)
+          .then(() => {
+            return db
+              .into('folders')
+              .insert(testFolders)
+          })
+          .then(() => {
+            return db
+              .into('notes')
+              .insert(testNotes)
+          })
+      })
+      it('responds with 204 and updates the article', () => {
+        const idToUpdate = 2
+        const updateNote = {
+          thoughts: 'not so keen on it'
+        }
+        const expectedNote = {
+          ...testNotes[idToUpdate - 1],
+          ...updateNote
+        }
+        return supertest(app)
+          .patch(`/api/notes/${idToUpdate}`)
+          .send(updateNote)
+          .expect(204)
+          .then(res =>
+            supertest(app)
+              .get(`/api/notes/${idToUpdate}`)
+              .expect(expectedNote)
+          )
+      })
+      it('responds with 204 when updating only a subset of fields', () => {
+        const idToUpdate = 2
+        const updateNote = {
+          what: 'updated title'
+        }
+        const expectedNote = {
+          ...testNotes[idToUpdate - 1],
+          ...updateNote
+        }
+
+        return supertest(app)
+          .patch(`/api/notes/${idToUpdate}`)
+          .send({
+            ...updateNote,
+            fieldToIgnore: 'should not be in GET response'
+          })
+          .expect(204)
+          .then(res =>
+            supertest(app)
+              .get(`/api/notes/${idToUpdate}`)
+              .expect(expectedNote)
+          )
+      })
+    })
+  })
+  describe('DELETE /api/notes/:note_id', () => {
+    context('Given no notes', () => {
+      it('responds with 404', () => {
+        const noteId = 12345
+        return supertest(app)
+          .delete(`/api/notes/${noteId}`)
+          .expect(404, { error: { message: `Note doesn't exist`}})
+      })
+    })
+    context('Given notes in the database', () => {
+      beforeEach('insert notes', () => {
+        return db
+          .into('users')
+          .insert(testUsers)
+          .then(() => {
+            return db
+              .into('folders')
+              .insert(testFolders)
+          })
+          .then(() => {
+            return db
+              .into('notes')
+              .insert(testNotes)
+          })
+      })
+      it('responds with 204 and removes the note', () => {
+        const idToRemove = 2
+        const expectedNotes = testNotes.filter(note => note.id !== idToRemove)
+        return supertest(app)
+          .delete(`/api/notes/${idToRemove}`)
+          .expect(204)
+          .then(res =>
+              supertest(app)
+                .get(`/api/notes`)
+                .expect(expectedNotes)
+          )
+      })
+    })
+  })
+})
