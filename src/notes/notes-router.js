@@ -10,7 +10,8 @@ notesRouter
   .route('/')
   .all(requireAuth)
   .get((req, res, next) => {
-    NotesService.getAllNotes(req.app.get('db'))
+    author = req.user.id
+    NotesService.getAllNotes(req.app.get('db'), author)
       .then(notes => {
         res.json(notes.map(NotesService.serializeNote))
       })
@@ -52,14 +53,13 @@ notesRouter
   .patch(jsonParser, (req, res, next) => {
     const { what, how, who, link, thoughts, favorite, folder } = req.body
     const noteToUpdate = { what, how, who, link, thoughts, favorite, folder }
-    noteToUpdate.author = req.user.id
     NotesService.updateNote(
       req.app.get('db'), 
       req.params.note_id, 
       noteToUpdate
     )
-      .then(numRowsAffected => {
-        res.status(204).end()
+      .then(updatedNote => {
+        res.status(200).json(NotesService.serializeNote(updatedNote[0]))
       })
       .catch(next)
   })

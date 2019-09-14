@@ -1,8 +1,10 @@
 const xss = require('xss')
 
 const NotesService = {
-  getAllNotes(knex) {
-    return knex.select('*').from('notes')
+  getAllNotes(knex, author) {
+    return knex.select('*')
+    .from('notes')
+    .where('author', author)
   },
   getById(knex, id) {
     return knex.select('*')
@@ -23,7 +25,8 @@ const NotesService = {
   updateNote(knex, id, newNoteFields) {
     return knex('notes')
       .where({ id })
-      .update(newNoteFields)
+      .update(newNoteFields, returning=true)
+      .returning('*')
   },
   deleteNote(knex, id) {
     return knex('notes')
