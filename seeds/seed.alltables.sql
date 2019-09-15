@@ -30,4 +30,3 @@ VALUES
 ('Golden Hour, Kacey Musgraves', null, 'Pop Culture Happy Hour', 'https://open.spotify.com/album/7f6xPqyaolTiziKf5R5Z0c', 'Need to listen to the rest of the album', false, 1, 3),
 ('Scappoose Bay Paddling Center', 'Warren, OR', 'Sharon', 'https://www.yelp.com/biz/scappoose-bay-paddling-center-warren', 'The SUP place Sharon was telling me about', false, 1, 5);
 
-COMMIT;
