@@ -9,8 +9,8 @@ const notesRouter = express.Router()
 notesRouter
   .route('/')
   .all(requireAuth)
-  .get((req, res, next) => {
-    author = req.user.id
+  .get(jsonParser, (req, res, next) => {
+    const author = req.user.id
     NotesService.getAllNotes(req.app.get('db'), author)
       .then(notes => {
         res.json(notes.map(NotesService.serializeNote))

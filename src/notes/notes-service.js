@@ -2,6 +2,7 @@ const xss = require('xss')
 
 const NotesService = {
   getAllNotes(knex, author) {
+    console.log('author', author)
     return knex.select('*')
     .from('notes')
     .where('author', author)
