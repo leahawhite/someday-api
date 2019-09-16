@@ -1,5 +1,3 @@
-BEGIN;
-
 TRUNCATE notes, folders, users RESTART IDENTITY CASCADE;
 
 INSERT INTO users (full_name, email, password)
@@ -29,4 +27,3 @@ VALUES
 ('The Stakes: A History of Persuasion podcast', 'WNYC/Podkicker', 'Stuart', 'https://www.wnycstudios.org/story/the-stakes-history-persuasion-part-1', 'Three-part series on technology', true, 1, 3),
 ('Golden Hour, Kacey Musgraves', null, 'Pop Culture Happy Hour', 'https://open.spotify.com/album/7f6xPqyaolTiziKf5R5Z0c', 'Need to listen to the rest of the album', false, 1, 3),
 ('Scappoose Bay Paddling Center', 'Warren, OR', 'Sharon', 'https://www.yelp.com/biz/scappoose-bay-paddling-center-warren', 'The SUP place Sharon was telling me about', false, 1, 5);
-

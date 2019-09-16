@@ -1,26 +1,37 @@
-# Express Boilerplate!
+# Someday API
 
-This is a boilerplate project used for starting new projects!
+[Someday](https://github.com/leahawhite/someday) is a note-keeping app that creates reminders of all of the cool movies, TV, travel locations, and related topics you want to explore in the future. This is the API that serves and stores all data for the app.
 
-## Set up
+## Server is hosted on Heroku:
 
-Complete the following steps to start a new project (NEW-PROJECT-NAME):
+[https://murmuring-badlands-92884.herokuapp.com/](https://murmuring-badlands-92884.herokuapp.com/)
 
-1. Clone this repository to your local machine `git clone BOILERPLATE-URL NEW-PROJECTS-NAME`
-2. `cd` into the cloned repository
-3. Make a fresh start of the git history for this project with `rm -rf .git && git init`
-4. Install the node dependencies `npm install`
-5. Move the example Environment file to `.env` that will be ignored by git and read by the express server `mv example.env .env`
-6. Edit the contents of the `package.json` to use NEW-PROJECT-NAME instead of `"name": "express-boilerplate",`
+## API Endpoints
+Users
+- POST '/api/users' creates a new user upon signup
 
-## Scripts
+Auth
+- POST '/api/auth/login' matches given user credentials and provides a JWT token
 
-Start the application `npm start`
+Folders
+- GET '/api/folders' gets all category folders in the database
 
-Start nodemon for the application `npm run dev`
+Notes
+- GET '/api/notes
+- GET '/api/notes/:note_id' gets a place by ID
+- POST '/api/notes' creates a new note
+- PATCH '/api/notes/:note_id' updates a note
+- DELETE '/api/notes/:note_id' deletes a note
 
-Run the tests `npm test`
+## Technology Used
+- Node.js
+- Express
+- PostgreSQL
+- Knex.js
+- Mocha
+- Chai
+- Supertest
 
-## Deploying
+## Security
+This application uses JWT authentication.
 
-When your new project is ready for deployment, add a new Heroku application with `heroku create`. This will make a new git remote called "heroku" and you can then `npm run deploy` which will push to this remote's master branch. 
