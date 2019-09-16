@@ -291,7 +291,7 @@ describe('Notes endpoints', () => {
               .insert(testNotes)
           })
       })
-      it('responds with 204 and updates the article', () => {
+      it('responds with 200, updates and returns the article', () => {
         const idToUpdate = 2
         const updateNote = {
           thoughts: 'not so keen on it'
@@ -304,7 +304,7 @@ describe('Notes endpoints', () => {
           .patch(`/api/notes/${idToUpdate}`)
           .set('Authorization', helpers.makeAuthHeader(testUsers[0]))
           .send(updateNote)
-          .expect(204)
+          .expect(200)
           .then(res =>
             supertest(app)
               .get(`/api/notes/${idToUpdate}`)
@@ -312,7 +312,7 @@ describe('Notes endpoints', () => {
               .expect(expectedNote)
           )
       })
-      it('responds with 204 when updating only a subset of fields', () => {
+      it('responds with 200 when updating only a subset of fields', () => {
         const idToUpdate = 2
         const updateNote = {
           what: 'updated title'
@@ -329,7 +329,7 @@ describe('Notes endpoints', () => {
             ...updateNote,
             fieldToIgnore: 'should not be in GET response'
           })
-          .expect(204)
+          .expect(200)
           .then(res =>
             supertest(app)
               .get(`/api/notes/${idToUpdate}`)
