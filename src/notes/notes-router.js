@@ -11,6 +11,7 @@ notesRouter
   .all(requireAuth)
   .get(jsonParser, (req, res, next) => {
     const author = req.user.id
+    console.log('author', author)
     NotesService.getAllNotes(req.app.get('db'), author)
       .then(notes => {
         res.json(notes.map(NotesService.serializeNote))

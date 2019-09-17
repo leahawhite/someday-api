@@ -43,8 +43,8 @@ const NotesService = {
       thoughts: xss(note.thoughts),
       favorite: note.favorite,
       author: note.author,
-      date_created: new Date(note.date_created).toLocaleString(),
-      date_edited: new Date(note.date_edited).toLocaleString(),
+      date_created: note.date_created,
+      date_edited: note.date_edited,
       folder: note.folder
     }
   }

@@ -218,9 +218,6 @@ describe('Notes endpoints', () => {
           expect(res.body.author).to.eql(testUsers[0].id)
           expect(res.body.folder).to.eql(newNote.folder)
           expect(res.headers.location).to.eql(`/api/notes/${res.body.id}`)
-          // const expectedDate = new Date().toLocaleString('en', { timeZone: 'UTC' })
-          // const actualDate = new Date(res.body.date_created).toLocaleString()
-          // expect(actualDate).to.eql(expectedDate)
         })
           .then(res =>
             supertest(app)

@@ -55,8 +55,8 @@ function makeNotesArray() {
       thoughts: "A really great book I heard about",
       favorite: true,
       author: 1,
-      date_created: new Date('09-04-2019').toLocaleString(),
-      date_edited: new Date('09-04-2019').toLocaleString(),
+      date_created: "2019-09-04T07:00:00.000Z",
+      date_edited: "2019-09-04T07:00:00.000Z",
       folder: 2
     },
     {
@@ -68,8 +68,8 @@ function makeNotesArray() {
       thoughts: "Good stuff",
       favorite: true,
       author: 1,
-      date_created: new Date('09-04-2019').toLocaleString(),
-      date_edited: new Date('09-04-2019').toLocaleString(),
+      date_created: "2019-09-04T07:00:00.000Z",
+      date_edited: "2019-09-04T07:00:00.000Z",
       folder: 3
     },
     {
@@ -81,8 +81,8 @@ function makeNotesArray() {
       thoughts: "Seems bleak, but Megan says it's good.",
       favorite: false,
       author: 1,
-      date_created: new Date('09-04-2019').toLocaleString(),
-      date_edited: new Date('09-04-2019').toLocaleString(),
+      date_created: "2019-09-04T07:00:00.000Z",
+      date_edited: "2019-09-04T07:00:00.000Z",
       folder: 1
     }
   ]
@@ -108,8 +108,8 @@ function makeExpectedNote(note, users, folders) {
     thoughts: note.thoughts,
     favorite: note.favorite,
     author: noteAuthor,
-    date_created: new Date(note.date_created).toLocaleString(),
-    date_edited: new Date(note.date_edited).toLocaleString(),
+    date_created: note.date_created,
+    date_edited: note.date_edited,
     folder: noteFolder
   }
 }
